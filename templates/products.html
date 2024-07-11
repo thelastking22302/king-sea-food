@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Danh sách sản phẩm</title>
+</head>
+<body>
+    <h1>Danh sách sản phẩm</h1>
+    <ul>
+        {{range .data}}
+        <li>
+            <h2>{{.Title}}</h2>
+            <p>Giá: {{.Price}}</p>
+            <p>Mô tả: {{.Description}}</p>
+        </li>
+        {{end}}
+    </ul>
+
+    {{if .paging}}
+    <div>
+        Trang {{.paging.Page}} / {{.paging.Total}}
+    </div>
+    {{end}}
+</body>
+</html>
