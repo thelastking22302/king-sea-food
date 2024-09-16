@@ -1,20 +1,14 @@
 # Sử dụng image Go làm base image
-FROM golang:1.21-alpine
+FROM golang:alpine AS builder 
 
-WORKDIR /app
+WORKDIR /build
 COPY . .
-RUN go mod download
+RUN go mod download 
 
-# Thiết lập biến môi trường
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 
+RUN go build -o kingseafood ./cmd/dev/main.go
 
-# Build ứng dụng Go trong thư mục cmd/dev
-WORKDIR /app/cmd/dev
-RUN go build -o main .
+FROM  scratch
 
-# Quay lại thư mục gốc của ứng dụng
-WORKDIR /app
-
-# Command để chạy ứng dụng Go từ thư mục cmd/dev
-CMD ["/app/cmd/dev/main"]
+COPY  --from=builder /build/kingseafood /
+ENTRYPOINT [ "/kingseafood" ]
 

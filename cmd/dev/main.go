@@ -9,7 +9,6 @@ import (
 func main() {
 	r := gin.New()
 	r.Use(gin.Logger())
-	r.LoadHTMLGlob("templates/*")
 	router.KingRouters(r)
 	r.Run(":3250")
 }

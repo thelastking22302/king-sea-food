@@ -1,14 +1,31 @@
 package security
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"os"
 	"thelastking/kingseafood/model"
+	redisdb "thelastking/kingseafood/pkg/redisDB"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/joho/godotenv"
 )
 
-const keyJwt = "asfdgrhtheerte"
+var keyJwt string
+
+func init() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	keyJwt = os.Getenv("KEY_JWT")
+	if keyJwt == "" {
+		log.Fatal("KEY_JWT is not set")
+	}
+}
 
 func JwtToken(data *model.Users) (string, string, error) {
 	//thanh phan cua 1 token
@@ -40,13 +57,31 @@ func JwtToken(data *model.Users) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
-func UpdateToken(data *model.Users) (string, string, error) {
-	//new token
-	newAccessToken, newRefreshToken, err := JwtToken(data)
+func UpdateToken(userToken string) (string, error) {
+	//kiểm tra xem refresh token có hợp lệ hay không
+	claims, err := ValidateToken(userToken)
 	if err != nil {
-		return "", "", err
+		return "", errors.New("refreshtoken khong hop le")
 	}
-	return newAccessToken, newRefreshToken, nil
+	//kiem tra refresh token con han hay khong
+	if claims.ExpiresAt < time.Now().Local().Unix() {
+		return "", errors.New("refresh token het han ban phai dang nhap lai")
+	}
+	//neu con han thi cap nhap moi lai 1 asscesstoken
+	newClaimsAccess := model.Token{
+		UserID: claims.UserID,
+		Role:   claims.Role,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			NotBefore: time.Now().Unix(),
+		},
+	}
+	asscessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaimsAccess).SignedString([]byte(keyJwt))
+	if err != nil {
+		return "", err
+	}
+	return asscessToken, nil
 }
 
 func ValidateToken(userToken string) (*model.Token, error) {
@@ -66,6 +101,17 @@ func ValidateToken(userToken string) (*model.Token, error) {
 		// Check token expiration
 		if claims.ExpiresAt < time.Now().Local().Unix() {
 			fmt.Println("claims token expires")
+		}
+		//check token redis
+		redisInstance := redisdb.GetInstanceRedis()
+		exists, err := redisInstance.CheckRefreshToken()
+		if err != nil {
+			return nil, fmt.Errorf("error checking refresh token: %v", err)
+		}
+
+		if !exists {
+			fmt.Println("Refresh token invalid on Redis.")
+			return nil, fmt.Errorf("refresh token not found")
 		}
 		return claims, nil
 	} else {

@@ -9,5 +9,5 @@ type OrderItem struct {
 	Unit_price    *float64  `json:"unit_price" validate:"required" gorm:"column:unit_price;"`
 	Created_at    time.Time `json:"created_at" gorm:"column:created_at;"`
 	Updated_at    time.Time `json:"updated_at" gorm:"column:updated_at;"`
-	Food_id       string    `json:"product_id" validate:"required" gorm:"column:product_id;"`
+	Product_ID    string    `json:"product_id" validate:"required" gorm:"column:product_id;"`
 }

@@ -47,7 +47,7 @@ func HandlerCreateOrderItems(db *gorm.DB) gin.HandlerFunc {
 			Unit_price:    dataOrderItems1.Unit_price,
 			Created_at:    time,
 			Updated_at:    time,
-			Food_id:       dataOrderItems1.Food_id,
+			Product_ID:    dataOrderItems1.Product_ID,
 		}
 		biz := food_bussiness.NewOrderItemController(repoimpl.NewSql(db))
 		if err := biz.NewCreateOrderItem(c.Request.Context(), &dataOrderItems); err != nil {

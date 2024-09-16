@@ -23,7 +23,7 @@ func JwtMiddleware() gin.HandlerFunc {
 		}
 
 		// Lưu trữ userId vào context để handler sử dụng
-		c.Set("user_id", claims.UserID)
+		c.Set("userId", claims.UserID)
 		c.Next()
 	}
 }

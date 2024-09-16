@@ -51,3 +51,15 @@ func (s *sql) DeleteFoodMenu(ctx context.Context, id map[string]interface{}) err
 	}
 	return nil
 }
+func (s *sql) ViewProductFromMenu(ctx context.Context, id map[string]interface{}) ([]food.Product, error) {
+	var data []food.Product
+	if err := s.db.Table("menus").Select("products.*").
+		Joins("JOIN products ON products.menu_id = menus.menu_id ").
+		//Khi sử dụng JOIN, bạn cần chỉ định rõ ràng tên bảng trước tên cột trong mệnh đề WHERE
+		//để tránh lỗi "ambiguous column reference"
+		Where("menus.menu_id = ?", id["menu_id"]). // Chỉ định rõ ràng menus.menu_id
+		Scan(&data).Error; err != nil {
+		return nil, err
+	}
+	return data, nil
+}

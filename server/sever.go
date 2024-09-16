@@ -1,19 +1,35 @@
 package server
 
 import (
-	"fmt"
-	"log"
 	"os"
+	"sync"
 	"thelastking/kingseafood/pkg/db"
+	"thelastking/kingseafood/pkg/logger"
 
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
-func Run() *gorm.DB {
+// singleton
+type Singleton struct{}
+
+var (
+	once     sync.Once
+	instance *Singleton
+)
+
+func GetInstance() *Singleton {
+	once.Do(func() {
+		instance = &Singleton{}
+	})
+	return instance
+}
+
+func (s *Singleton) Run() *gorm.DB {
+	myLogger := logger.GetLogger()
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		myLogger.Errorf("Error loading .env file: %v", err)
 	}
 	userName := os.Getenv("USER")
 	password := os.Getenv("PASSWORD")
@@ -29,8 +45,8 @@ func Run() *gorm.DB {
 	}
 	db, err := config.NewConnection()
 	if err != nil {
-		log.Fatalf("Fails to connect to database: %v", err)
+		myLogger.Errorf("Fails to connect to database: %v", err)
 	}
-	fmt.Printf("Connect suscess to database: %v", db)
+	myLogger.Infof("Connect suscess to database: %v", db)
 	return db
 }

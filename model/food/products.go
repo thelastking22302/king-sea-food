@@ -12,5 +12,4 @@ type Product struct {
 	CreatedAt   *time.Time `json:"created_at" gorm:"column:created_at;"`
 	UpdatedAt   *time.Time `json:"updated_at" gorm:"column:updated_at;"`
 	Menu_ID     string     `json:"menu_id" validate:"required" gorm:"column:menu_id;"`
-	Menu        *MenuFood  `json:"menu" gorm:"-"`
 }

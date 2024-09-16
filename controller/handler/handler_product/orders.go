@@ -42,11 +42,13 @@ func HandlerCreateOrder(db *gorm.DB) gin.HandlerFunc {
 		fmt.Printf("idOrders: %v\n", idOrders)
 		time := time.Now().UTC()
 		dataOrder := food.Order{
-			Order_id:   idOrders.String(),
-			Table_id:   dataOrder1.Table_id,
-			Order_date: dataOrder1.Order_date,
-			Created_at: time,
-			Updated_at: time,
+			Order_id:     idOrders.String(),
+			UserID:       dataOrder1.UserID,
+			Total_price:  dataOrder1.Total_price,
+			Order_date:   dataOrder1.Order_date,
+			Order_Status: dataOrder1.Order_Status,
+			Created_at:   time,
+			Updated_at:   time,
 		}
 
 		biz := food_bussiness.NewOrderController(repoimpl.NewSql(db))

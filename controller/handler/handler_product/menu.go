@@ -45,7 +45,6 @@ func CreateMenuHandler(db *gorm.DB) gin.HandlerFunc {
 			Category:   menus.Category,
 			Created_At: &time,
 			Updated_At: &time,
-			Products:   []*food.Product{},
 		}
 		biz := food_bussiness.NewMenuController(repoimpl.NewSql(db))
 		if err := biz.NewCreateMenu(c.Request.Context(), &menu); err != nil {
@@ -134,5 +133,20 @@ func HandlerDeleteMenu(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, common.ReponseData("delete success"))
+	}
+}
+func ViewProductHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idMenu := c.Param("menu_id")
+		biz := food_bussiness.NewMenuController(repoimpl.NewSql(db))
+		listPro, err := biz.NewViewProductFromMenu(c.Request.Context(), idMenu)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "view product database faild",
+				"details": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, common.ReponseData(listPro))
 	}
 }
