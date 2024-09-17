@@ -2,10 +2,10 @@ package security
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"thelastking/kingseafood/model"
+	"thelastking/kingseafood/pkg/logger"
 	redisdb "thelastking/kingseafood/pkg/redisDB"
 	"time"
 
@@ -58,14 +58,17 @@ func JwtToken(data *model.Users) (string, string, error) {
 }
 
 func UpdateToken(userToken string) (string, error) {
+	log := logger.GetLogger()
 	//kiểm tra xem refresh token có hợp lệ hay không
 	claims, err := ValidateToken(userToken)
 	if err != nil {
-		return "", errors.New("refreshtoken khong hop le")
+		log.Errorf("refresh token validation failed: %v", err)
+		return "", errors.New("refreshtoken invalid")
 	}
 	//kiem tra refresh token con han hay khong
 	if claims.ExpiresAt < time.Now().Local().Unix() {
-		return "", errors.New("refresh token het han ban phai dang nhap lai")
+		log.Errorf("refresh token expired: %v", claims.ExpiresAt)
+		return "", errors.New("refresh token expired")
 	}
 	//neu con han thi cap nhap moi lai 1 asscesstoken
 	newClaimsAccess := model.Token{
@@ -79,13 +82,16 @@ func UpdateToken(userToken string) (string, error) {
 	}
 	asscessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaimsAccess).SignedString([]byte(keyJwt))
 	if err != nil {
+		log.Errorf("access token %s failed", asscessToken)
 		return "", err
 	}
+	log.Infof("access token %s", asscessToken)
 	return asscessToken, nil
 }
 
 func ValidateToken(userToken string) (*model.Token, error) {
 	//xac thuc token
+	log := logger.GetLogger()
 	token, err := jwt.ParseWithClaims(
 		userToken,
 		&model.Token{},
@@ -94,24 +100,26 @@ func ValidateToken(userToken string) (*model.Token, error) {
 		},
 	)
 	if err != nil {
+		log.Errorf("token invalid")
 		return nil, err
 	}
 	//trich xuat cac claims duoc token xac thuc
 	if claims, ok := token.Claims.(*model.Token); ok {
 		// Check token expiration
 		if claims.ExpiresAt < time.Now().Local().Unix() {
-			fmt.Println("claims token expires")
+			log.Errorf("claims token expires")
 		}
 		//check token redis
 		redisInstance := redisdb.GetInstanceRedis()
 		exists, err := redisInstance.CheckRefreshToken()
 		if err != nil {
-			return nil, fmt.Errorf("error checking refresh token: %v", err)
+			log.Errorf("error checking refresh token: %v", err)
+			return nil, err
 		}
 
 		if !exists {
-			fmt.Println("Refresh token invalid on Redis.")
-			return nil, fmt.Errorf("refresh token not found")
+			log.Errorf("Refresh token invalid on Redis.")
+			return nil, err
 		}
 		return claims, nil
 	} else {
