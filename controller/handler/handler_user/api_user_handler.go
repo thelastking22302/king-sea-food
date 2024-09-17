@@ -194,16 +194,7 @@ func UpdateUserHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		// hashedPassword := security.HashAndSalt([]byte(req_update.Password_user))
-		// req_update.Password_user = hashedPassword
-		// validate := validator.New()
-		// if err := validate.Struct(req_update); err != nil {
-		// 	c.JSON(http.StatusBadRequest, gin.H{
-		// 		"error":   err.Error(),
-		// 		"comment": "Can't validator",
-		// 	})
-		// 	return
-		// }
+
 		userID, exists := c.Get("userId")
 		if !exists || userID == nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
